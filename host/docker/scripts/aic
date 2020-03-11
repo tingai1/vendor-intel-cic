@@ -81,7 +81,7 @@ function prepare_data_partition {
 
 function delete_data_partition {
 
-    CON_NAME=$($DOCKER ps -a | awk '{print $NF}' | grep -E 'android')
+    CON_NAME=$(sudo $DOCKER ps -a | awk '{print $NF}' | grep -E 'android')
     if [ ! -z "$CON_NAME" ]; then
         if [ ! -z "$(sudo lvs | grep $CON_NAME)" ]; then
             echo "[AIC] Remove LVM for container $CON_NAME..."
@@ -94,7 +94,7 @@ function delete_data_partition {
     fi
 
     # Delete data image
-    if [ ! -z "$(losetup | grep $AIC_DATA_IMG)" ]; then
+    if [ ! -z "$(sudo losetup | grep $AIC_DATA_IMG)" ]; then
        mounted_loop_dev=$(losetup | grep $AIC_DATA_IMG | awk '{print $1}')
         echo "Detach mounted loop device, $mounted_loop_dev..."
         sudo pvremove -f $mounted_loop_dev
@@ -743,7 +743,7 @@ function uninstall {
     # umount binderfs mount point if any
     umount_binderfs
 
-    if [ ! -z "$($DOCKER inspect --format='{{.Config.Cmd}}' $c | grep "\-f")" ]; then
+    if [ ! -z "$(sudo $DOCKER inspect --format='{{.Config.Cmd}}' $c | grep "\-f")" ]; then
         # Delete data partition
         delete_data_partition
     fi
@@ -828,7 +828,7 @@ function start {
         if [[ ! $EXISTED_CONTAINERS =~ (^|[[:space:]])"$c"($|[[:space:]]) ]]; then
             echo "[AIC] $c not existed!"
         else
-            if [ ! -z "$($DOCKER inspect --format='{{.Config.Cmd}}' $c | grep "\-f")" ]; then
+            if [ ! -z "$(sudo $DOCKER inspect --format='{{.Config.Cmd}}' $c | grep "\-f")" ]; then
                 prepare_data_partition $c
             fi
             $DOCKER start $c
